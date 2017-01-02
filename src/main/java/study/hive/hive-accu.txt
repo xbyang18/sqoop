@@ -1,0 +1,52 @@
+Hive求累加：
+作业
+---------------------
+输入：用户每天的流量
+用户         日期        流量
+熊猫tv     2016-01-02      5T
+快手       2016-01-02    3T
+YY         2016-01-02  2T
+来疯       2016-01-02    2T
+熊猫tv     2016-01-03      4T
+快手       2016-01-03    3T
+YY         2016-01-03   1T
+来疯       2016-01-03    4T
+
+-------------------
+输出：
+用户         月份        月访问  总访问
+熊猫tv     2016-01             100T    100T
+熊猫tv     2016-02             200T    300T
+熊猫tv     2016-03             200T    500T
+熊猫tv     2016-04             250T    750T
+快手       2016-01             50T    50T
+快手       2016-02             120T   170T
+-------------------实现方法：
+
+create table user_tr(
+name string,
+access_date string,
+trs int)
+row format delimited fields terminated by '\t';
+
+load data local inpath '/home/hadoop/data.log' into table user_tr;
+
+select t1.name, t1.access_mouth,min(t1.trs_count) daily ,sum(t2.trs_count) total
+from
+(select
+  name,
+  substr(access_date,0,7) access_mouth,
+  sum(trs)  trs_count
+from user_tr
+group by name,substr(access_date,0,7))t1
+inner join
+(select
+  name,
+  substr(access_date,0,7) access_mouth,
+  sum(trs)  trs_count
+from user_tr
+group by name,substr(access_date,0,7))t2
+on t1.name = t2.name
+where t2.access_mouth<=t1.access_mouth
+group by t1.name,t1.access_mouth
+order by t1.name,t1.access_mouth;
